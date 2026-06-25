@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A premium web dashboard to browse, search, filter and tweet Google BigQuery Release Notes.">
+    <title>BigQuery Release Notes Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="glow-backdrop"></div>
+    <div class="glow-backdrop secondary"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-container">
+                    <!-- Custom SVG Animated BigQuery-style Logo -->
+                    <svg viewBox="0 0 100 100" class="bq-logo" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="gradient-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00F0FF" />
+                                <stop offset="100%" stop-color="#7000FF" />
+                            </linearGradient>
+                            <linearGradient id="gradient-secondary" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#FF007A" />
+                                <stop offset="100%" stop-color="#FF9900" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Grid pattern representing Big Data -->
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2"/>
+                        <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="4,4"/>
+                        <!-- Database cylinders / nodes -->
+                        <rect x="35" y="32" width="30" height="10" rx="3" fill="url(#gradient-primary)" opacity="0.85"/>
+                        <rect x="35" y="46" width="30" height="10" rx="3" fill="url(#gradient-primary)" opacity="0.9"/>
+                        <rect x="35" y="60" width="30" height="10" rx="3" fill="url(#gradient-primary)" opacity="1.0"/>
+                        <!-- Database lines -->
+                        <line x1="40" y1="37" x2="60" y2="37" stroke="#0B0F19" stroke-width="1.5"/>
+                        <line x1="40" y1="51" x2="60" y2="51" stroke="#0B0F19" stroke-width="1.5"/>
+                        <line x1="40" y1="65" x2="60" y2="65" stroke="#0B0F19" stroke-width="1.5"/>
+                        <!-- Database connection/query line representing search/insights -->
+                        <path d="M 25,65 Q 15,45 35,37" fill="none" stroke="url(#gradient-secondary)" stroke-width="2" stroke-dasharray="100" stroke-dashoffset="0" class="query-path"/>
+                        <circle cx="25" cy="65" r="4" fill="#FF007A"/>
+                        <circle cx="35" cy="37" r="4" fill="#FF9900"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery</h1>
+                    <span class="badge-release">Release Notes Hub</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <span id="cache-time" class="cache-info">Last fetched: Loading...</span>
+                <button id="btn-refresh" class="btn btn-primary" title="Refresh Release Notes" aria-label="Refresh Release Notes">
+                    <i class="fas fa-sync-alt icon-spin-hover" id="refresh-icon"></i>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="app-content">
+            <!-- Sidebar for Filter & Stats -->
+            <aside class="sidebar-panel">
+                <!-- Search Component -->
+                <div class="glass-card search-card">
+                    <h3><i class="fas fa-search"></i> Search Updates</h3>
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-field-icon"></i>
+                        <input type="text" id="search-box" placeholder="Search keywords..." autocomplete="off">
+                        <button id="clear-search" class="clear-btn" aria-label="Clear Search"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+
+                <!-- Stats and Filters -->
+                <div class="glass-card filter-card">
+                    <h3><i class="fas fa-filter"></i> Filter by Category</h3>
+                    <div class="category-filters" id="category-filters-container">
+                        <!-- Filters will be generated dynamically -->
+                        <button class="filter-pill active" data-category="all">
+                            <span class="pill-label">All Updates</span>
+                            <span class="pill-count" id="count-all">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- App Info -->
+                <div class="glass-card info-card">
+                    <h3><i class="fas fa-info-circle"></i> Quick Guide</h3>
+                    <p>Select any individual release note update card to reveal the Tweet composer at the bottom of the screen. You can customize the tweet format before posting.</p>
+                </div>
+            </aside>
+
+            <!-- Release Notes Stream Section -->
+            <section class="notes-stream-section">
+                <!-- Status Message (Error/Loading) -->
+                <div id="status-container" class="status-container">
+                    <div class="spinner-loader">
+                        <div class="double-bounce1"></div>
+                        <div class="double-bounce2"></div>
+                    </div>
+                    <p id="status-text">Fetching latest release notes from Google Cloud...</p>
+                </div>
+
+                <!-- Cards Stream -->
+                <div id="notes-stream" class="notes-stream hidden">
+                    <!-- Cards will be populated here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state hidden">
+                    <i class="far fa-folder-open empty-icon"></i>
+                    <h3>No updates found</h3>
+                    <p>Try modifying your search or choosing another category filter.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Floating Tweet Drawer -->
+    <div id="tweet-drawer" class="tweet-drawer">
+        <div class="drawer-glow"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <div class="drawer-title">
+                    <i class="fab fa-twitter tweet-header-icon"></i>
+                    <div>
+                        <h3>Compose Update Tweet</h3>
+                        <span class="drawer-subtitle">Share this BigQuery release note on X / Twitter</span>
+                    </div>
+                </div>
+                <button id="btn-close-drawer" class="btn-close" aria-label="Close Composer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="drawer-body">
+                <div class="selected-preview-card">
+                    <div class="preview-meta">
+                        <span id="preview-category-badge" class="category-badge">Feature</span>
+                        <span id="preview-date" class="preview-date">June 23, 2026</span>
+                    </div>
+                    <div id="preview-html-content" class="preview-html-content">
+                        <!-- Shortened preview html -->
+                    </div>
+                </div>
+                
+                <div class="tweet-composer-field">
+                    <label for="tweet-textarea">Tweet Content</label>
+                    <textarea id="tweet-textarea" rows="4" maxlength="500" placeholder="Write your Tweet here..."></textarea>
+                    
+                    <div class="composer-footer">
+                        <div class="char-count-wrapper">
+                            <span id="char-count">0</span> / <span class="char-limit-max">280</span>
+                            <span id="char-warning" class="char-warning-msg hidden"><i class="fas fa-exclamation-triangle"></i> Exceeds recommended 280 chars</span>
+                        </div>
+                        <div class="composer-actions">
+                            <button id="btn-reset-tweet" class="btn btn-secondary" title="Reset to original format">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                            <button id="btn-tweet" class="btn btn-tweet-submit">
+                                <i class="fab fa-twitter"></i> Tweet Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Script -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
