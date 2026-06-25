@@ -60,6 +60,23 @@
             
             <div class="header-actions">
                 <span id="cache-time" class="cache-info">Last fetched: Loading...</span>
+                
+                <!-- Export CSV Button -->
+                <button id="btn-export-csv" class="btn btn-secondary" title="Export current updates to CSV">
+                    <i class="fas fa-file-csv"></i>
+                    <span>Export CSV</span>
+                </button>
+
+                <!-- Theme Switcher -->
+                <div class="theme-switch-wrapper">
+                    <i class="fas fa-moon theme-icon" title="Dark Mode"></i>
+                    <label class="theme-switch" for="checkbox-theme">
+                        <input type="checkbox" id="checkbox-theme" />
+                        <div class="slider round"></div>
+                    </label>
+                    <i class="fas fa-sun theme-icon" title="Light Mode"></i>
+                </div>
+
                 <button id="btn-refresh" class="btn btn-primary" title="Refresh Release Notes" aria-label="Refresh Release Notes">
                     <i class="fas fa-sync-alt icon-spin-hover" id="refresh-icon"></i>
                     <span>Refresh</span>
